@@ -1,46 +1,23 @@
-# --- Tools ---
-OCAML = ocaml
-Z3 = z3
+run: solution.txt
 
-# --- Programs ---
-MAIN = main.ml
-Z3TOGRID = z3togrid.ml
-CHECKSOL = check_sol.ml
-CHECKMULT = check_multiple_sol.ml
+dimacs.txt: main.ml input.txt
+	ocamlc main.ml -o main
+	./main < input.txt > dimacs.txt
 
-# --- Input / Output files ---
-INPUT = input.txt
+output1.txt: dimacs.txt
+	z3 -dimacs dimacs.txt > output1.txt
 
-OUTPUT = output.txt
-OUTPUT1 = output1.txt
-OUTPUT2 = output2.txt
-OUTPUT3 = output3.txt
-OUTPUT4 = output4.txt
-OUTPUT5 = output5.txt
+output2.txt: z3togrid.ml output1.txt
+	ocamlc z3togrid.ml -o z3togrid
+	./z3togrid < output1.txt > output2.txt
 
-all: $(OUTPUT5)
+output3.txt: check_sol.ml dimacs.txt output1.txt
+	ocamlc check_sol.ml -o check_sol
+	cat dimacs.txt output1.txt | ./check_sol > output3.txt
 
-$(OUTPUT): $(MAIN) $(INPUT)
-	@echo "Running main.ml..."
-	$(OCAML) $(MAIN) < $(INPUT) > $(OUTPUT)
+output4.txt: output3.txt
+	z3 -dimacs output3.txt > output4.txt
 
-$(OUTPUT1): $(OUTPUT)
-	@echo "Running Z3 on output.txt..."
-	$(Z3) -dimacs $(OUTPUT) > $(OUTPUT1)
-
-$(OUTPUT2): $(Z3TOGRID) $(OUTPUT1)
-	@echo "Converting Z3 output to grid..."
-	$(OCAML) $(Z3TOGRID) < $(OUTPUT1) > $(OUTPUT2)
-
-$(OUTPUT3): $(CHECKSOL) $(OUTPUT) $(OUTPUT1)
-	@echo "Checking solution..."
-	cat $(OUTPUT) $(OUTPUT1) | $(OCAML) $(CHECKSOL) > $(OUTPUT3)
-
-$(OUTPUT4): $(OUTPUT3)
-	@echo "Running Z3 on new solution..."
-	$(Z3) -dimacs $(OUTPUT3) > $(OUTPUT4)
-
-$(OUTPUT5): $(CHECKMULT) $(OUTPUT2) $(OUTPUT4)
-	@echo "Checking multiple solutions..."
-	cat $(OUTPUT2) $(OUTPUT4) | $(OCAML) $(CHECKMULT) > $(OUTPUT5)
-
+solution.txt : check_multiple_sol.ml output2.txt output4.txt
+	ocamlc check_multiple_sol.ml -o check_multiple_sol
+	cat output2.txt output4.txt | ./check_multiple_sol > solution.txt
