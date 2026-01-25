@@ -14,7 +14,7 @@ let inp = read_lines count 1 inp
 let y = List.rev inp
 
 let to_val c = 
-  match c with '0'..'9' -> int_of_char c - 48 | 'A'..'F' -> int_of_char c - 55 | 'a'..'f' -> int_of_char c - 87 | _ -> -1
+  match c with '0' -> 16 | '1'..'9' -> int_of_char c - 48 | 'A'..'F' -> int_of_char c - 55 | 'a'..'f' -> int_of_char c - 87 | _ -> -1
 
 let x = List.fold_left (^) "" y
 
@@ -36,6 +36,7 @@ let square = n * n
 let cube = square * n
 
 let root = match n with
+  | 1 -> 1
   | 4 -> 2
   | 9 -> 3
   | 16 -> 4
@@ -180,8 +181,31 @@ let print_super_block z n k =
     )
   in
   outer 0
+let rec basic st n x h=
+    if n=x then(
+      match n with
+      | 9 -> (6156+h)
+      | 16 -> (62464+h)
+      | _ -> (count+ n*n*n - n*n + n)
+    )
+    else(
+      if st.[n]<>'.' then (
+        basic st (n+1) x (h+1)
+      )
+      else(
+        basic st (n+1) x h
+      )
+    )
 
+let first_line () =
+  print_string "p cnf ";
+  print_int (count*count*count);
+  print_string " ";
+  print_int (basic x 0 count 0);
+  print_string "\n"
+  
 let () =
+first_line ();
 basic_clause x 0 (count*count);
 gen_cell cube n;
 gen_row cube n;
