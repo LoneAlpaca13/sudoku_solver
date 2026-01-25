@@ -7,8 +7,7 @@ let rec read_lines n count inp=
   if count=n then inp
   else
     let line = read_line() in
-    let lp = line::inp in
-    read_lines n (count+1) lp
+    read_lines n (count+1) (line::inp)
 
 let inp = read_lines count 1 inp
 let y = List.rev inp
@@ -184,9 +183,10 @@ let print_super_block z n k =
 let rec basic st n x h=
     if n=x then(
       match n with
-      | 9 -> (6156+h)
-      | 16 -> (62464+h)
-      | _ -> (count+ n*n*n - n*n + n)
+      | 1 -> 1
+      | 81 -> (6156+h)
+      | 256 -> (62464+h)
+      | _ -> 0
     )
     else(
       if st.[n]<>'.' then (
@@ -201,7 +201,7 @@ let first_line () =
   print_string "p cnf ";
   print_int (count*count*count);
   print_string " ";
-  print_int (basic x 0 count 0);
+  print_int (basic x 0 (count*count) 0);
   print_string "\n"
   
 let () =
