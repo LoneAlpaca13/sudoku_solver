@@ -1,4 +1,37 @@
-let n = 16
+let s = read_line()
+let count = String.length s
+
+open List
+let inp = [s]
+let rec read_lines n count inp=
+  if count=n then inp
+  else
+    let line = read_line() in
+    let lp = line::inp in
+    read_lines n (count+1) lp
+
+let inp = read_lines count 1 inp
+let y = List.rev inp
+
+let to_val c = 
+  match c with '0'..'9' -> int_of_char c - 48 | 'A'..'F' -> int_of_char c - 55 | 'a'..'f' -> int_of_char c - 87 | _ -> -1
+
+let x = List.fold_left (^) "" y
+
+let rec basic_clause st n x=
+    if n=x then ()
+    else(
+      if st.[n]<>'.' then (
+        print_int((n)*count+to_val st.[n]);
+      print_string " 0\n";
+        basic_clause st (n+1) x 
+      )
+      else(
+        basic_clause st (n+1) x
+      )
+    )
+
+let n = count
 let square = n * n
 let cube = square * n
 
@@ -149,6 +182,7 @@ let print_super_block z n k =
   outer 0
 
 let () =
+basic_clause x 0 (count*count);
 gen_cell cube n;
 gen_row cube n;
 gen_col cube n;
