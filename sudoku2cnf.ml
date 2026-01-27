@@ -17,16 +17,17 @@ let to_val c =
 
 let x = List.fold_left (^) "" y
 
-let rec basic_clause st n x=
+(*Prints all the clauses which are generated from the input file(only prints the clauses that denote the presence of some value in the input grid).*)
+let rec input_clause st n x=
     if n=x then ()
     else(
       if st.[n]<>'.' then (
         print_int((n)*count+to_val st.[n]);
       print_string " 0\n";
-        basic_clause st (n+1) x 
+        input_clause st (n+1) x 
       )
       else(
-        basic_clause st (n+1) x
+        input_clause st (n+1) x
       )
     )
 
@@ -39,8 +40,9 @@ let root = match n with
   | 4 -> 2
   | 9 -> 3
   | 16 -> 4
-  | _ -> failwith "Unsupported n"
+  | _ -> -1
 
+(*Prints numbers starting from z till there are total of n entries each less than the previous by a difference of k*)
 let print_range z n k =
   let rec aux count =
     if count = n then ()        
@@ -52,15 +54,17 @@ let print_range z n k =
   aux 0;
   Printf.printf "0\n"
 
-let rec gen_cell z n =
+(*Class print_range which prints the condition for each cell in the sudoku grid have atleast one value*)
+let rec gen_cell_atleast_one z n =
   if z = n then
     print_range z n 1
   else (
     print_range z n 1;
-    gen_cell (z - n) n
+    gen_cell_atleast_one (z - n) n
   )
 
-let rec gen_row z n =
+(*Class print_range which prints the condition for each row in the sudoku grid have atleast one value*)
+let rec gen_row_atleast_one z n =
   let rec aux y count =
     if count = n then ()        
     else (
@@ -72,10 +76,11 @@ let rec gen_row z n =
     aux z 0
   else (
     aux z 0;
-    gen_row (z - n*n) n
+    gen_row_atleast_one (z - n*n) n
   )
 
-let rec gen_col z n =
+(*Class print_range which prints the condition for each column in the sudoku grid have atleast one value*)
+let rec gen_col_atleast_one z n =
   let rec aux y count =
     if count = n then ()        
     else (
@@ -87,9 +92,10 @@ let rec gen_col z n =
     aux z 0
   else (
     aux z 0;
-    gen_col (z - n) n
+    gen_col_atleast_one (z - n) n
   )
 
+(*Takes inputs z,n,k and returns the negation of combinations of any two elements which lie in the sequence (z,z-n,z-2n,... z-(k-1)*n)*)
 let rec comb z n k =
   let rec aux z n count =
     if count = k then ()
@@ -103,8 +109,17 @@ let rec comb z n k =
     aux z n 1;
     comb (z-n) n (k-1)
   )
-    
-let rec no_tworow_values z n =
+
+(*Calls comb func which in turn prints all the possible combination required to satisfy the at most one constraint in each cell*)
+let rec at_max_one_in_cell z n =
+  match z with
+  | 0 -> ()
+  | _ ->
+      comb z 1 n;
+      at_max_one_in_cell (z - n) n
+
+(*Calls comb func which in turn prints all the possible combination required to satisfy the at most one constraint in each row*)
+let rec no_two_row_values_same z n =
   let rec aux z n k count =
     if count = n then ()
     else(
@@ -117,10 +132,11 @@ let rec no_tworow_values z n =
   )
   else(
     aux z n n 0;
-    no_tworow_values (z - n*n) n
+    no_two_row_values_same (z - n*n) n
   )
 
-let rec no_twocol_values z n =
+(*Calls comb func which in turn prints all the possible combination required to satisfy the at most one constraint in each column*)
+let rec no_two_col_values_same z n =
   let rec aux z n k count =
     if count = n then ()
     else(
@@ -133,9 +149,12 @@ let rec no_twocol_values z n =
   )
   else(
     aux z n n 0;
-    no_twocol_values (z-n) n
+    no_two_col_values_same (z-n) n
   )
 
+(*Prints the clause corresponding to a single block-row inside a sub-grid.
+  It groups k variables from k different rows that belong to the same block
+  and prints them as one clause.*)
 let print_block z n k =
   let rec print_group start count =
     if count = k then ()
@@ -154,6 +173,8 @@ let print_block z n k =
   groups 0;
   Printf.printf "0\n"
 
+(*Iterates over all cell positions inside a single sub-grid and calls
+  print_block to generate the block constraints for that sub-grid.*)
 let print_whole_block z n=
   let rec aux z n count =
     if count = n then ()
@@ -164,7 +185,9 @@ let print_whole_block z n=
   in
   aux z n 0
 
-let print_super_block z n k =
+(*Iterates over the final element of all sub-grids in the sudoku and calls the print_whole_block
+  to print constraints for each block.*)
+let iterate_block z n k =
   let rec inner start count =
     if count = k then ()
     else (
@@ -180,38 +203,43 @@ let print_super_block z n k =
     )
   in
   outer 0
-let rec basic st n x h=
+
+(*Calculates the no of clauses
+  The clause count for the the basic soduku encoding have been hard coded and the no of clauses counted from input have been calculated*)
+let rec cal_clause_count st n x h=
     if n=x then(
       match n with
       | 1 -> 1
-      | 81 -> (6156+h)
-      | 256 -> (62464+h)
+      | 81 -> (9072+h)
+      | 256 -> (93184+h)
       | _ -> 0
     )
     else(
       if st.[n]<>'.' then (
-        basic st (n+1) x (h+1)
+        cal_clause_count st (n+1) x (h+1)
       )
       else(
-        basic st (n+1) x h
+        cal_clause_count st (n+1) x h
       )
     )
 
+(*Prints the first line of the cnf output*)
 let first_line () =
   print_string "p cnf ";
   print_int (count*count*count);
   print_string " ";
-  print_int (basic x 0 (count*count) 0);
+  print_int (cal_clause_count x 0 (count*count) 0);
   print_string "\n"
   
 let () =
 first_line ();
-basic_clause x 0 (count*count);
-gen_cell cube n;
-gen_row cube n;
-gen_col cube n;
-no_tworow_values cube n;
-no_twocol_values cube n;
-print_super_block cube n root
+input_clause x 0 (count*count);
+iterate_block cube n root;
+no_two_row_values_same cube n;
+no_two_col_values_same cube n;
+gen_cell_atleast_one cube n;
+gen_row_atleast_one cube n;
+gen_col_atleast_one cube n;
+at_max_one_in_cell cube n;
 ;;
 

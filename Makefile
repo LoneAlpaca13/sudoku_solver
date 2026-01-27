@@ -1,23 +1,35 @@
-run: solution.txt
-
-dimacs.txt: main.ml input.txt
-	ocamlc main.ml -o main
-	./main < input.txt > dimacs.txt
-
-output1.txt: dimacs.txt
-	z3 -dimacs dimacs.txt > output1.txt
-
-output2.txt: z3togrid.ml output1.txt
-	ocamlc z3togrid.ml -o z3togrid
-	./z3togrid < output1.txt > output2.txt
-
-output3.txt: check_sol.ml dimacs.txt output1.txt
+all : 
+	ocamlc sudoku2cnf.ml -o sudoku2cnf
+	ocamlc soltogrid.ml -o soltogrid
 	ocamlc check_sol.ml -o check_sol
-	cat dimacs.txt output1.txt | ./check_sol > output3.txt
-
-output4.txt: output3.txt
-	z3 -dimacs output3.txt > output4.txt
-
-solution.txt : check_multiple_sol.ml output2.txt output4.txt
 	ocamlc check_multiple_sol.ml -o check_multiple_sol
-	cat output2.txt output4.txt | ./check_multiple_sol > solution.txt
+
+run: output.txt
+
+dimacs.cnf: sudoku2cnf.ml input.txt
+	ocamlc sudoku2cnf.ml -o sudoku2cnf
+	./sudoku2cnf < input.txt > dimacs.cnf
+
+z3_output.txt: dimacs.cnf
+	z3 -dimacs dimacs.cnf > z3_output.txt
+
+first_sol.txt: soltogrid.ml z3_output.txt
+	ocamlc soltogrid.ml -o soltogrid
+	./soltogrid < z3_output.txt > first_sol.txt
+
+mult_sol.cnf: check_sol.ml dimacs.cnf z3_output.txt
+	ocamlc check_sol.ml -o check_sol
+	cat dimacs.cnf z3_output.txt | ./check_sol > mult_sol.cnf
+
+z3_new_input.txt: mult_sol.cnf
+	z3 -dimacs mult_sol.cnf > z3_new_input.txt
+
+output.txt : check_multiple_sol.ml first_sol.txt z3_new_input.txt
+	ocamlc check_multiple_sol.ml -o check_multiple_sol
+	cat first_sol.txt z3_new_input.txt | ./check_multiple_sol > output.txt
+clean:
+	rm -f *.cmi *.cmo *.cmx 
+	rm -f sudoku2cnf soltogrid check_sol check_multiple_sol
+
+clean_intermediate:
+	rm -f dimacs.cnf z3_output.txt first_sol.txt mult_sol.cnf z3_new_input.txt

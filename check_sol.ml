@@ -8,6 +8,7 @@ let p =
 let lst_1 = tl (tl p)
 let numb = int_of_string(hd lst_1)
 
+(*Prints the whole of the encoding we generated during dimacs.cnf(while increasing clause count by 1)*)
 let new_line () = 
   print_string "p cnf ";
   print_int (numb);
@@ -26,6 +27,8 @@ let new_line () =
   in
   aux 0
 
+(*Checks if there is a solution, and if there is one prints the negation of the original solution and prints it with the original clauses
+  and then sends it back to z3*)
 let check_another () =
   let s = read_line () in
   if s.[2]='S' then
