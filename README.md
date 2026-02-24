@@ -155,5 +155,3 @@ It prints:
 - Ensure `z3` is on your PATH and supports the `-dimacs` option.
 - Input line length determines supported grid sizes; invalid sizes may produce errors.
 - If you want just the solver step, run the specific `make` targets above instead of `make run`.
-
-If you want, I can add an example `input.txt` for a 9x9 puzzle and a small script to run the pipeline automatically.
